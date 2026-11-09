@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ParkirKu · Prototype Sistem Deteksi Ketersediaan Parkir Motor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fb;--sf:#fff;--s2:#f1f4fa;--s3:#e6eaf3;--ink:#0f172a;--mu:#64748b;--ln:#e4e8f1;--pri:#4f46e5;--pri2:#8b5cf6;--g:#10b981;--a:#f59e0b;--r:#ef4444;--sh:0 1px 2px rgba(15,23,42,.04),0 10px 28px -10px rgba(15,23,42,.16)}
+[data-theme=dark]{--bg:#0a0e1a;--sf:#121828;--s2:#182036;--s3:#232c45;--ink:#e9edf7;--mu:#8e98b0;--ln:#232c44;--pri:#818cf8;--pri2:#a78bfa;--sh:0 1px 2px rgba(0,0,0,.3),0 12px 30px -12px rgba(0,0,0,.7)}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .35s,color .35s;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;background:radial-gradient(40% 35% at 15% 10%,color-mix(in srgb,var(--pri) 18%,transparent),transparent 70%),radial-gradient(35% 30% at 90% 20%,color-mix(in srgb,var(--pri2) 15%,transparent),transparent 70%),radial-gradient(40% 40% at 60% 100%,color-mix(in srgb,var(--g) 10%,transparent),transparent 70%);animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(3%,-2%) rotate(3deg)}}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+small{font-size:12.5px}.mu{color:var(--mu)}h1,h2,h3,h4{margin:0;letter-spacing:-.02em}svg{flex:none}
+.g{--c:var(--g)}.a{--c:var(--a)}.r{--c:var(--r)}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 20px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:color-mix(in srgb,var(--bg) 78%,transparent);border-bottom:1px solid var(--ln)}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;font-weight:800;font-size:19px;box-shadow:0 6px 16px -4px color-mix(in srgb,var(--pri) 60%,transparent)}
+.brand b{display:block;font-size:16px;line-height:1.2}.brand small{color:var(--mu)}
+.tabs{display:flex;gap:4px;background:var(--s2);padding:4px;border-radius:14px;border:1px solid var(--ln)}
+.tabs button{padding:8px 14px;border-radius:10px;font-weight:600;font-size:14px;color:var(--mu);transition:.25s;display:flex;gap:7px;align-items:center}
+.tabs button:hover{color:var(--ink)}.tabs button.on{background:var(--sf);color:var(--ink);box-shadow:var(--sh)}
+.acts{display:flex;gap:8px}.ib{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--sf);border:1px solid var(--ln);transition:.2s}.ib:hover{transform:translateY(-1px);border-color:var(--pri)}
+.demo{display:flex;align-items:center;gap:7px;padding:0 15px;height:40px;border-radius:12px;font-weight:700;font-size:14px;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;box-shadow:0 8px 18px -8px color-mix(in srgb,var(--pri) 80%,transparent);transition:.2s}.demo:hover{transform:translateY(-1px)}
+@media(max-width:760px){.top{flex-wrap:wrap;padding:10px 12px;gap:8px}.tabs{order:3;width:100%}.tabs button{flex:1;justify-content:center;padding:8px 4px;font-size:13px}.tabs svg{display:none}.brand small{display:none}.demo span{display:none}.demo{padding:0 11px}}
+
+/* layout */
+.main{max-width:1180px;margin:0 auto;padding:28px 20px 48px}.main.fade{animation:fadeUp .45s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}}
+.applay{display:grid;grid-template-columns:auto minmax(0,420px);gap:36px;align-items:start;justify-content:center}
+@media(max-width:900px){.applay{grid-template-columns:1fr;justify-items:center}.guide{max-width:390px}}
+
+/* device */
+.device{width:390px;height:812px;border-radius:50px;background:var(--bg);border:11px solid #0b0f19;box-shadow:0 0 0 2px #2a3142,0 40px 80px -30px rgba(15,23,42,.55);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:112px;height:30px;border-radius:20px;background:#0b0f19;z-index:60}
+.stb{display:flex;justify-content:space-between;padding:14px 28px 4px;font-size:13px;font-weight:700}
+.scr{flex:1;overflow-y:auto;padding:8px 18px 104px;scrollbar-width:none}.scr::-webkit-scrollbar{display:none}
+.scr.enter>*{animation:fadeUp .45s both}.scr.enter>*:nth-child(2){animation-delay:.05s}.scr.enter>*:nth-child(3){animation-delay:.1s}.scr.enter>*:nth-child(4){animation-delay:.15s}.scr.enter>*:nth-child(5){animation-delay:.2s}.scr.enter>*:nth-child(n+6){animation-delay:.25s}
+@media(max-width:700px){.main.app{padding:0}.applay{display:block}.guide{display:none}.device{width:100%;height:calc(100dvh - 104px);border:0;border-radius:0;box-shadow:none}.notch,.stb{display:none}.scr{padding-top:16px}}
+
+/* bottom nav */
+.nv{position:absolute;left:12px;right:12px;bottom:12px;display:flex;background:color-mix(in srgb,var(--sf) 88%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--ln);border-radius:22px;padding:6px;box-shadow:var(--sh);z-index:10}
+.nv .ind{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/4);border-radius:16px;background:color-mix(in srgb,var(--pri) 14%,transparent);transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
+.nv button{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0;font-size:11px;font-weight:600;color:var(--mu);transition:color .25s}
+.nv button.on{color:var(--pri)}.nv button.on svg{animation:pop .45s}
+
+/* home */
+.hello{display:flex;justify-content:space-between;align-items:center;margin:6px 0 14px}.hello h2{font-size:22px}
+.av{position:relative;width:44px;height:44px;border-radius:14px;background:var(--sf);border:1px solid var(--ln);display:grid;place-items:center}.av b{position:absolute;top:9px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--r);border:2px solid var(--sf);animation:pop .4s}
+.loc{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--sf);border:1px solid var(--ln);border-radius:16px;text-align:left;margin-bottom:14px;transition:.2s}.loc:hover{border-color:var(--pri)}.loc>span:nth-child(2){flex:1}.loc small{display:block;color:var(--mu)}
+.lic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--pri) 12%,transparent);color:var(--pri)}
+.hero{position:relative;border-radius:26px;padding:20px;background:var(--sf);border:1px solid var(--ln);box-shadow:var(--sh);overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 50% 0%,color-mix(in srgb,var(--c) 18%,transparent),transparent 70%);pointer-events:none}
+.rw{position:relative;display:grid;place-items:center;margin:4px auto 10px;width:180px}
+.ring{transform:rotate(-90deg)}.ring .rb{fill:none;stroke:var(--s3)}.ring .rf{fill:none;stroke:var(--c);stroke-linecap:round;transition:stroke-dashoffset 1.1s cubic-bezier(.3,.9,.3,1),stroke .4s;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--c) 45%,transparent))}
+.rc{position:absolute;text-align:center}.rc small{color:var(--mu)}.big{font-size:56px;font-weight:800;line-height:1;letter-spacing:-.04em}
+.cnt{display:inline-block;font-variant-numeric:tabular-nums}.cnt.bump{animation:bump .55s}@keyframes bump{40%{transform:scale(1.14)}}
+.hm{display:flex;justify-content:center;gap:10px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 8px;border-radius:99px;font-size:12px;font-weight:700;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);white-space:nowrap}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--c);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 60%,transparent)}100%{box-shadow:0 0 0 7px transparent}}
+.live{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mu)}.live i{width:6px;height:6px;border-radius:50%;background:var(--g);animation:blink 1.4s infinite}@keyframes blink{50%{opacity:.25}}
+.msg{text-align:center;margin:12px 0 14px;font-weight:600;position:relative}
+.slots{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;position:relative}.slots i{aspect-ratio:1;border-radius:4px;background:var(--c);transition:background .4s}.slots i.o{background:var(--s3)}.slots.in i{animation:pop .35s var(--d) both}
+@keyframes pop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.15)}}
+.legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--mu);position:relative}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);margin-right:5px;vertical-align:-1px}.legend i.o{background:var(--s3)}
+.banner{width:100%;display:flex;gap:12px;align-items:center;text-align:left;margin-top:12px;padding:14px;border-radius:18px;background:color-mix(in srgb,var(--c) 12%,var(--sf));border:1px solid color-mix(in srgb,var(--c) 35%,transparent);animation:shake .6s .3s both}.banner>svg:first-child{color:var(--c)}.banner span{flex:1}.banner small{display:block;color:var(--mu)}
+@keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.qa{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.qa button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:18px;background:var(--sf);border:1px solid var(--ln);font-size:12.5px;font-weight:600;transition:.2s}.qa button svg{color:var(--pri)}.qa button:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.qa button.on{background:color-mix(in srgb,var(--g) 12%,var(--sf));border-color:color-mix(in srgb,var(--g) 40%,transparent)}.qa button.on svg{color:var(--g);animation:ring 1s}
+@keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(15deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(8deg)}}
+.sh{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 10px}.sh h3{font-size:16px}
+.hs{display:flex;gap:10px;overflow-x:auto;margin:0 -18px;padding:0 18px 6px;scroll-snap-type:x mandatory;scrollbar-width:none}.hs::-webkit-scrollbar{display:none}
+.mini{flex:0 0 72%;scroll-snap-align:start;text-align:left;padding:14px;border-radius:18px;background:var(--sf);border:1px solid var(--ln);display:flex;flex-direction:column;gap:2px;transition:.2s}.mini:hover{border-color:var(--pri);transform:translateY(-2px)}.mn{font-size:30px;font-weight:800;margin-top:6px;line-height:1.1}.mn small{font-size:13px;color:var(--mu);font-weight:600}.mini small.mu{display:flex;gap:4px;align-items:center}
+
+/* generic */
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:20px;padding:16px;margin-bottom:12px}.card h4{margin:0 0 8px;font-size:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sbar{display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px}.sbar b{font-size:16px}.sbar span{width:40px}
+.pt{font-size:22px;margin:6px 0 2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.stats div{background:var(--s2);border-radius:14px;padding:10px}.stats small{display:block;color:var(--mu)}.stats b{font-size:22px}
+.pbar{height:10px;border-radius:9px;background:var(--s3);overflow:hidden;margin:8px 0 4px}.pbar i{display:block;height:100%;border-radius:9px;background:var(--c);transition:width 1.1s cubic-bezier(.3,.9,.3,1)}
+.li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--ln)}.li:last-child{border:0}.li>div{flex:1;min-width:0}.li small{display:block}
+.dir{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:800;background:var(--s2);flex:none}.dir.in{color:var(--r);background:color-mix(in srgb,var(--r) 12%,transparent)}.dir.out{color:var(--g);background:color-mix(in srgb,var(--g) 12%,transparent)}
+.btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:16px;font-weight:700;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;margin-bottom:10px;transition:.2s;box-shadow:0 8px 20px -8px color-mix(in srgb,var(--pri) 70%,transparent)}.btn:hover{transform:translateY(-1px);filter:brightness(1.06)}.btn:active{transform:scale(.98)}
+.btn.ghost{background:var(--sf);color:var(--ink);border:1.5px solid var(--ln);box-shadow:none}.btn.ok{background:var(--g);box-shadow:0 8px 20px -8px color-mix(in srgb,var(--g) 70%,transparent)}
+.btn.sm{width:auto;padding:9px 14px;margin:0;font-size:13.5px;border-radius:12px}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.seg button{padding:7px 13px;border-radius:99px;background:var(--sf);border:1px solid var(--ln);font-size:13px;font-weight:600;transition:.2s}.seg button:hover{border-color:var(--pri)}.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.altc{width:100%;text-align:left;display:block;padding:16px;border-radius:20px;background:var(--sf);border:1px solid var(--ln);margin-bottom:10px;transition:.2s}.altc:hover{transform:translateY(-2px);box-shadow:var(--sh);border-color:color-mix(in srgb,var(--c) 50%,var(--ln))}.altc small{display:block}
+.an{font-size:28px;font-weight:800;text-align:right;line-height:1}.an small{font-size:12px;color:var(--mu);font-weight:600}
+.best{display:inline-block;font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px;background:color-mix(in srgb,#f59e0b 18%,transparent);color:#d97706;margin-bottom:8px}
+.chart{display:flex;align-items:flex-end;gap:5px;height:170px;margin:26px 0 4px}
+.col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}.col small{font-size:10px;color:var(--mu)}
+.bar{width:100%;height:var(--h);border-radius:7px 7px 3px 3px;background:var(--s3);transform-origin:bottom;animation:grow .8s var(--d) cubic-bezier(.3,1.3,.5,1) both;position:relative}
+.bar.pk{background:linear-gradient(to top,#f59e0b,#fbbf24)}.bar.lo{background:linear-gradient(to top,#10b981,#34d399)}
+.bar span{position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%) scale(.8);opacity:0;background:var(--ink);color:var(--bg);font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;transition:.15s;pointer-events:none;white-space:nowrap}
+.col:hover .bar span,.bar.pk span{opacity:1;transform:translateX(-50%) scale(1)}.col:hover .bar{filter:brightness(1.1)}
+@keyframes grow{from{transform:scaleY(0)}}
+.ins{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.ins>div{padding:14px;border-radius:18px;background:color-mix(in srgb,var(--c) 11%,var(--sf));border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}.ins small{display:block;color:var(--mu)}.ins b{font-size:17px;display:block;margin:2px 0}
+.tip{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.sw{width:48px;height:28px;border-radius:99px;background:var(--s3);position:relative;transition:.3s;flex:none}.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:.4s cubic-bezier(.3,1.4,.5,1)}.sw.on{background:var(--g)}.sw.on::after{left:23px}
+.empty{text-align:center;padding:26px 18px;border:1.5px dashed var(--ln);border-radius:20px;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--mu)}.empty b{color:var(--ink)}
+details{border-bottom:1px solid var(--ln);padding:12px 0}details:last-child{border:0}summary{font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px}summary::-webkit-details-marker{display:none}summary::after{content:"+";font-size:20px;line-height:1;color:var(--mu);transition:.3s}details[open] summary::after{transform:rotate(45deg)}details p{margin:8px 0 0;color:var(--mu);font-size:14px;animation:fadeUp .3s}
+
+/* overlays inside phone */
+.push{position:absolute;top:48px;left:12px;right:12px;z-index:45;display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:18px;background:color-mix(in srgb,var(--sf) 94%,transparent);backdrop-filter:blur(14px);border:1px solid var(--ln);box-shadow:0 14px 30px -10px rgba(0,0,0,.35);animation:drop .55s cubic-bezier(.3,1.4,.5,1)}.push svg{color:var(--pri)}.push small{display:block;color:var(--mu)}
+@keyframes drop{from{transform:translateY(-130%);opacity:0}}
+@media(max-width:700px){.push{top:10px}}
+.ov{position:absolute;inset:0;z-index:40;background:rgba(8,12,24,.45);backdrop-filter:blur(2px);display:flex;align-items:flex-end}.ov.anim{animation:fade .25s}
+.sheet{width:100%;background:var(--sf);border-radius:26px 26px 0 0;padding:10px 18px 28px}.ov.anim .sheet{animation:up .45s cubic-bezier(.3,1.2,.5,1)}
+.grab{width:42px;height:5px;border-radius:9px;background:var(--s3);margin:0 auto 14px}
+@keyframes fade{from{opacity:0}}@keyframes up{from{transform:translateY(100%)}}
+.opt{width:100%;display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;text-align:left;transition:.2s}.opt:hover{background:var(--s2)}.opt.on{background:color-mix(in srgb,var(--pri) 10%,transparent)}.opt>span{flex:1}.opt small{display:block;color:var(--mu)}
+.onb{position:absolute;inset:0;z-index:50;background:var(--sf);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 30px}
+.oi{width:130px;height:130px;border-radius:40px;display:grid;place-items:center;font-size:64px;background:linear-gradient(135deg,color-mix(in srgb,var(--pri) 20%,transparent),color-mix(in srgb,var(--pri2) 20%,transparent));margin-bottom:28px;animation:pop .5s,float 3s .5s ease-in-out infinite}
+.onb h2{font-size:24px;margin-bottom:10px;animation:fadeUp .5s .1s both}.onb p{color:var(--mu);margin:0 0 28px;animation:fadeUp .5s .2s both;line-height:1.6}.onb .skip{position:absolute;top:52px;right:24px;color:var(--mu);font-weight:600}
+@media(max-width:700px){.onb .skip{top:18px}}
+.dots{display:flex;gap:6px;margin-bottom:22px}.dots i{width:8px;height:8px;border-radius:9px;background:var(--s3);transition:.35s}.dots i.on{width:26px;background:var(--pri)}
+@keyframes float{50%{transform:translateY(-8px)}}
+
+/* guide */
+.guide .card{padding:22px;border-radius:24px}.guide h2{font-size:26px;margin:6px 0 8px;line-height:1.2}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--pri);text-transform:uppercase}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:8px;margin-top:14px}.steps button{counter-increment:s;display:flex;gap:12px;align-items:flex-start;text-align:left;padding:12px;border-radius:14px;background:var(--s2);transition:.25s}.steps button:hover{transform:translateX(5px);background:color-mix(in srgb,var(--pri) 10%,var(--s2))}
+.steps button::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:var(--pri);color:#fff;font-weight:800;font-size:13px}.steps small{display:block;color:var(--mu)}
+
+/* gate */
+.gwrap{max-width:820px;margin:0 auto}.gsel{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}.gsel button{padding:8px 15px;border-radius:99px;background:var(--sf);border:1px solid var(--ln);font-weight:600;font-size:13.5px;transition:.2s}.gsel button.on{background:var(--ink);color:var(--bg)}
+.gate{position:relative;background:#05070c;color:#fff;border-radius:28px;padding:30px 28px 28px;text-align:center;border:10px solid #1a1f2b;box-shadow:0 30px 60px -25px rgba(0,0,0,.6),inset 0 0 80px rgba(0,0,0,.8);overflow:hidden}
+.gate::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 2px,transparent 2px 4px);pointer-events:none}
+.gate.g{--L:#34f5a0}.gate.a{--L:#ffc23d}.gate.r{--L:#ff5b52}
+.gtop{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.2em;color:#8a93a8;font-weight:700}.gate h2{font-size:clamp(22px,4vw,34px);letter-spacing:.06em;margin:10px 0 0}
+.gnum{font-size:clamp(110px,22vw,200px);font-weight:800;line-height:1.05;color:var(--L);text-shadow:0 0 30px color-mix(in srgb,var(--L) 60%,transparent),0 0 70px color-mix(in srgb,var(--L) 30%,transparent);transition:color .5s}
+.glab{letter-spacing:.3em;font-size:14px;color:#c6ccd8;font-weight:700}
+.gstat{display:inline-block;margin:20px 0 6px;padding:10px 26px;border-radius:14px;font-weight:800;font-size:clamp(16px,2.6vw,22px);letter-spacing:.06em;color:#05070c;background:var(--L);box-shadow:0 0 30px color-mix(in srgb,var(--L) 50%,transparent)}
+.gate.r .gstat{animation:blink 1.2s infinite}
+.garrow{margin-top:12px;font-weight:700;letter-spacing:.06em;color:#ffc23d}.arr{display:inline-block;animation:nudge 1s infinite}@keyframes nudge{50%{transform:translateX(8px)}}
+.gbar{height:8px;border-radius:9px;background:#1a1f2b;margin-top:22px;overflow:hidden}.gbar i{display:block;height:100%;background:var(--L);box-shadow:0 0 12px var(--L);transition:width 1.1s}
+.gnote{text-align:center;color:var(--mu);font-size:14px;margin-top:16px}
+
+/* dashboard */
+.dl{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:start}
+.side{position:sticky;top:90px;background:var(--sf);border:1px solid var(--ln);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.mi{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;font-weight:600;color:var(--mu);transition:.2s;text-align:left}.mi:hover{background:var(--s2);color:var(--ink)}.mi.on{background:color-mix(in srgb,var(--pri) 12%,transparent);color:var(--pri)}
+.ubox{margin-top:10px;padding-top:12px;border-top:1px solid var(--ln);display:flex;align-items:center;gap:10px}.uav{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;font-weight:800;flex:none}.ubox>div{flex:1}.ubox small{display:block;color:var(--mu)}
+@media(max-width:860px){.dl{grid-template-columns:1fr}.side{position:static;flex-direction:row;overflow-x:auto;padding:6px;align-items:center}.mi{white-space:nowrap}.ubox{margin:0 0 0 auto;padding:0 0 0 8px;border:0}.ubox>div,.ubox .uav{display:none}}
+.dhd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:16px;flex-wrap:wrap}.dhd h2{font-size:24px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--sf);border:1px solid var(--ln);border-radius:20px;padding:16px;position:relative}.kpi>small{color:var(--mu);font-weight:600}.kpi b{display:block;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-top:4px}
+.ki{position:absolute;right:14px;top:14px;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:color-mix(in srgb,var(--c,var(--pri)) 14%,transparent);color:var(--c,var(--pri))}
+.st>*{animation:fadeUp .5s both}.st>*:nth-child(2){animation-delay:.06s}.st>*:nth-child(3){animation-delay:.12s}.st>*:nth-child(4){animation-delay:.18s}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:14px}
+.lc{background:var(--sf);border:1px solid var(--ln);border-radius:22px;padding:16px}.rwm{display:flex;align-items:center;gap:14px;margin:12px 0}.rws{position:relative;display:grid;place-items:center}.rws>b{position:absolute;font-size:22px;font-weight:800}
+.bpair{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bpair button{padding:10px;border-radius:12px;background:var(--s2);font-weight:700;font-size:13px;transition:.2s}.bpair button:hover{background:var(--s3)}.bpair button:active{transform:scale(.97)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);font-weight:700}td,th{text-align:left;padding:11px 12px;border-bottom:1px solid var(--ln);white-space:nowrap}
+tr.new td{animation:flash 1.8s}@keyframes flash{0%,30%{background:color-mix(in srgb,var(--pri) 22%,transparent)}}
+.tag{display:inline-block;padding:3px 9px;border-radius:8px;font-size:12px;font-weight:700;background:var(--s2)}.tag.in{color:var(--r);background:color-mix(in srgb,var(--r) 12%,transparent)}.tag.out{color:var(--g);background:color-mix(in srgb,var(--g) 12%,transparent)}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}
+input,select{width:100%;font:inherit;padding:11px 12px;border-radius:12px;border:1.5px solid var(--ln);background:var(--s2);color:var(--ink);transition:.2s;outline:none}input:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 4px color-mix(in srgb,var(--pri) 18%,transparent)}
+input[type=range]{padding:0;accent-color:var(--pri);border:0;background:none;box-shadow:none}
+.fm{max-width:460px}
+.login{display:grid;grid-template-columns:1.1fr 1fr;max-width:900px;margin:10px auto;background:var(--sf);border:1px solid var(--ln);border-radius:28px;overflow:hidden;box-shadow:var(--sh)}
+.lart{padding:36px;background:linear-gradient(145deg,#4f46e5,#8b5cf6);color:#fff;position:relative;overflow:hidden}.lart::after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.1);right:-80px;bottom:-80px;animation:float 6s ease-in-out infinite}
+.lart h2{font-size:28px;margin:18px 0 10px}.lart p{opacity:.88;margin:0}.lbadge{width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.18);display:grid;place-items:center}.lfeat{display:flex;flex-direction:column;gap:8px;margin-top:22px;font-weight:600}.lfeat span{display:flex;gap:8px;align-items:center}
+.lform{padding:36px}.lform .btn{margin-top:14px}
+@media(max-width:760px){.login{grid-template-columns:1fr}.lart,.lform{padding:24px}}
+.modal{position:fixed;inset:0;z-index:80;background:rgba(8,12,24,.5);backdrop-filter:blur(4px);display:grid;place-items:center;padding:20px;animation:fade .2s}.modal>div{background:var(--sf);border-radius:24px;padding:24px;max-width:380px;width:100%;animation:popin .4s cubic-bezier(.3,1.4,.5,1)}.modal h3{margin:12px 0 6px}
+@keyframes popin{from{transform:scale(.9);opacity:0}}
+.mic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--pri) 14%,transparent);color:var(--pri)}
+
+/* simulator */
+.sim{position:fixed;top:0;right:0;bottom:0;width:370px;max-width:92vw;z-index:70;background:var(--sf);border-left:1px solid var(--ln);box-shadow:-20px 0 60px -20px rgba(0,0,0,.3);padding:18px;overflow-y:auto;transform:translateX(105%);transition:transform .5s cubic-bezier(.3,1,.4,1)}
+body.simon .sim{transform:none}
+.scrim{position:fixed;inset:0;z-index:65;background:rgba(8,12,24,.35);opacity:0;pointer-events:none;transition:.3s}body.simon .scrim{opacity:1;pointer-events:auto}
+@media(min-width:1200px){body.simon .scrim{opacity:0;pointer-events:none}body.simon .main{padding-right:390px}}
+.simh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.simh b{font-size:17px}
+.road{position:relative;height:124px;border-radius:18px;background:linear-gradient(#2b3142,#22283a);overflow:hidden;margin:12px 0}
+.road::before{content:"";position:absolute;left:0;right:0;top:62%;border-top:3px dashed rgba(255,255,255,.3)}
+.sensor{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px}
+.sensor span{position:absolute;top:6px;left:50%;transform:translateX(-50%);background:#0b0f19;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;z-index:2;transition:.2s}
+.sensor i{position:absolute;left:0;right:0;background:rgba(255,90,90,.22);transition:.15s;border-radius:2px}.sensor .b1{top:30px;bottom:48%}.sensor .b2{top:54%;bottom:8px}
+.sensor.hit i,.sensor.hitl .b2{background:#ff4d4d;box-shadow:0 0 14px 3px #ff4d4d}.sensor.hit span,.sensor.hitl span{background:#ff4d4d}
+.sensor em{position:absolute;font-style:normal;font-size:9px;color:rgba(255,255,255,.45);left:8px;white-space:nowrap}.sensor em.e1{top:36%}.sensor em.e2{top:76%}
+.actor{position:absolute;top:66%;left:-14%;color:#fff;transform:translateY(-50%);z-index:3;font-size:34px;line-height:1}.actor .fl{display:block}.actor.go svg,.actor.go .ped{animation:bob .22s infinite alternate}.ped{display:inline-block}
+@keyframes bob{to{transform:translateY(-2px)}}
+.rtag{position:absolute;bottom:6px;font-size:10px;font-weight:800;letter-spacing:.12em;color:rgba(255,255,255,.45)}.rtag.l{left:10px}.rtag.rr{right:10px}
+.simst{padding:10px 12px;border-radius:12px;background:var(--s2);font-size:13px;margin-bottom:12px;display:flex;gap:8px;align-items:center}
+.sbtn{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sbtn button,.sbtn2 button{padding:11px 6px;border-radius:12px;background:var(--s2);border:1px solid var(--ln);font-weight:700;font-size:13px;transition:.2s}.sbtn button:hover,.sbtn2 button:hover{border-color:var(--pri)}
+.sbtn button:first-child{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border:0}.sbtn button:disabled{opacity:.45;cursor:wait}
+.sbtn2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.tg{display:flex;justify-content:space-between;align-items:center;margin:14px 0 4px;font-weight:600;font-size:14px}
+.scen{margin-top:14px;padding:14px;border-radius:16px;background:var(--s2)}.scen ol{padding-left:18px;font-size:13px;color:var(--mu);margin:6px 0 0}.scen li{margin-bottom:4px}
+
+/* toast */
+#toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:92vw}
+.toast{background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;font-weight:600;font-size:14px;box-shadow:0 12px 30px -10px rgba(0,0,0,.4);animation:tin .45s cubic-bezier(.3,1.4,.5,1);text-align:center}.toast.ok{background:#10b981;color:#fff}.toast.w{background:#f59e0b;color:#1a1200}.toast.out{animation:tout .3s forwards}
+@keyframes tin{from{transform:translateY(20px) scale(.9);opacity:0}}@keyframes tout{to{transform:translateY(10px);opacity:0}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo">P</div><div><b>ParkirKu</b><small>Sistem Deteksi Ketersediaan Parkir Motor</small></div></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="acts"><button class="ib" id="thm" onclick="togTheme()" aria-label="Ganti tema"></button><button class="demo" id="demo" onclick="togSim()"></button></div>
+</header>
+<main class="main" id="main"></main>
+
+<div class="scrim" onclick="togSim()"></div>
+<aside class="sim" id="sim" aria-label="Simulator sensor">
+  <div class="simh"><b>🧪 Simulator sensor</b><button class="ib" onclick="togSim()" aria-label="Tutup" id="simx"></button></div>
+  <small class="mu">Simulasikan motor lewat gerbang. Angka di aplikasi, layar gerbang, dan dashboard akan berubah otomatis.</small>
+  <label>Lokasi gerbang</label><select id="simsel" onchange="pick(+this.value)"></select>
+  <div class="road">
+    <div class="sensor" id="sA" style="left:36%"><span>A</span><i class="b1"></i><i class="b2"></i><em class="e1">60 cm</em><em class="e2">30 cm</em></div>
+    <div class="sensor" id="sB" style="left:64%"><span>B</span><i class="b1"></i><i class="b2"></i></div>
+    <div class="actor" id="actor"></div>
+    <div class="rtag l">LUAR</div><div class="rtag rr">DALAM</div>
+  </div>
+  <div class="simst" id="simst"></div>
+  <div class="sbtn"><button onclick="drive('in')">↓ Motor masuk</button><button onclick="drive('out')">↑ Motor keluar</button><button onclick="drive('walk')">🚶 Pejalan kaki</button></div>
+  <details style="margin-top:8px"><summary>Picu sensor manual</summary>
+    <div class="sbtn2" style="grid-template-columns:1fr 1fr 1fr"><button onclick="sens('A')">Sensor A</button><button onclick="sens('B')">Sensor B</button><button onclick="tmo()">⏱ Timeout</button></div>
+    <small class="mu">A lalu B = motor masuk. B lalu A = motor keluar. Kalau cuma satu sensor terpicu, data diabaikan.</small>
+  </details>
+  <div class="tg"><span>Simulasi otomatis (data acak)</span><button class="sw" id="autoBtn" onclick="togAuto()" aria-label="Simulasi otomatis"></button></div>
+  <div class="sbtn2"><button onclick="setFull()">⛔ Buat parkir penuh</button><button onclick="reset()">↺ Reset data</button></div>
+  <div class="scen"><b>Skenario uji</b><ol>
+    <li>Klik <b>Buat parkir penuh</b>, lihat banner merah di Beranda.</li>
+    <li>Buka lokasi alternatif, lalu kembali dan aktifkan pengingat.</li>
+    <li>Klik <b>Motor keluar</b>, notifikasi push akan muncul.</li>
+    <li>Cek perubahan di Layar Gerbang dan Dashboard.</li></ol></div>
+</aside>
+<div id="toasts"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const ic={home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',bell:'<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',help:'<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>',pin:'<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',down:'<path d="m6 9 6 6 6-6"/>',back:'<path d="m15 18-6-6 6-6"/>',right:'<path d="m9 18 6-6-6-6"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',flask:'<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7 15h10"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',check:'<path d="M20 6 9 17l-5-5"/>',nav:'<path d="m3 11 19-9-9 19-2-8z"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/>',zap:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',edit:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',monitor:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>'};
+const svg=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic[n]}</svg>`;
+const MOTO='<svg width="62" height="44" viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="33" r="8"/><circle cx="51" cy="33" r="8"/><path d="M13 33h13l7-10h11l7 10"/><path d="M44 23l-3-8h6"/><path d="M20 23h13"/><path d="M29 16l-3 7"/><circle cx="31" cy="7" r="4.5" fill="currentColor"/><path d="M31 12l-2 6 8 1"/><circle cx="55" cy="20" r="2.4" fill="#ffd54a" stroke="none"/></svg>';
+
+const I=()=>[
+ {n:'Parkir FILKOM',s:'Gedung F, depan lobi',cap:120,free:18,d:'Di sini',m:0},
+ {n:'Parkir Rektorat',s:'Samping gedung rektorat',cap:200,free:64,d:'350 m',m:5},
+ {n:'Parkir Perpustakaan',s:'Basement perpustakaan pusat',cap:80,free:0,d:'500 m',m:7}];
+const L0=[['07:41','Parkir FILKOM','Masuk',18],['07:40','Parkir FILKOM','Keluar',19],['07:38','Parkir Rektorat','Masuk',64],['07:35','Parkir Perpustakaan','Penuh',0]];
+const S={tab:'app',scr:'home',cur:0,L:I(),th:20,nt:{},log:[],lid:0,seen:0,role:null,dp:'ov',lf:'all',day:(new Date().getDay()+6)%7,per:1,cf:null,sq:null,sheet:false,sheetNew:false,onb:0,shown:{},upd:[],notifs:[],push:null,auto:false,busy:false,_ls:null,_lt:null,_enter:true,navPrev:0};
+function initData(){S.log=L0.map((r,i)=>({id:L0.length-i,t:r[0],n:r[1],d:r[2],s:r[3]}));S.lid=S.seen=L0.length;const n=Date.now();S.upd=[n-45e3,n-20e3,n-95e3]}
+initData();
+
+const SN=['Tersedia','Hampir penuh','Penuh'],SC=['g','a','r'];
+const st=l=>l.free<=0?2:l.free/l.cap*100<=S.th?1:0;
+const chip=l=>`<span class="chip ${SC[st(l)]}"><i></i>${SN[st(l)]}</span>`;
+const cl=()=>S.L[S.cur],pc=l=>Math.round((l.cap-l.free)/l.cap*100),pad=h=>String(h).padStart(2,'0');
+const T=()=>new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}).replace('.',':');
+const ago=t=>{const s=Math.floor((Date.now()-t)/1e3);return s<10?'baru saja':s<60?s+' dtk lalu':Math.floor(s/60)+' mnt lalu'};
+const greet=()=>{const h=new Date().getHours();return h<11?'pagi':h<15?'siang':h<18?'sore':'malam'};
+const dcls=d=>d.startsWith('Masuk')?'in':d.startsWith('Keluar')?'out':'';
+const days=['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
+
+/* animated helpers */
+function num(k,v){const f=S.shown[k]??0;return `<span class="cnt" data-k="${k}" data-f="${f}" data-t="${v}">${f}</span>`}
+function ring(l,k,sz=180,sw=14){const r=(sz-sw)/2,C=2*Math.PI*r,fr=l.free/l.cap,pf=S.shown[k]??0;S.shown[k]=fr;
+ return `<svg class="ring" width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" class="rb" stroke-width="${sw}"/><circle cx="${sz/2}" cy="${sz/2}" r="${r}" class="rf ${SC[st(l)]}" stroke-width="${sw}" stroke-dasharray="${C}" style="stroke-dashoffset:${C*(1-pf)}" data-to="stroke-dashoffset:${C*(1-fr)}"/></svg>`}
+function pbar(l,k,cls='pbar'){const p=pc(l),f=S.shown[k]??0;S.shown[k]=p;return `<div class="${cls} ${SC[st(l)]}"><i style="width:${f}%" data-to="width:${p}%"></i></div>`}
+function slots(l,n=48){const occ=Math.min(l.free>0?n-1:n,Math.round((l.cap-l.free)/l.cap*n));let h='';for(let i=0;i<n;i++)h+=`<i class="${i<occ?'o':SC[st(l)]}" style="--d:${i*10}ms"></i>`;return `<div class="slots ${S._enter?'in':''}">${h}</div>`}
+function bars(l,m=1){const h=[];for(let x=6;x<=18;x++)h.push(Math.max(4,Math.round(Math.min(97,100*(Math.exp(-((x-8.5)**2)/3)*.9+Math.exp(-((x-12.5)**2)/4)*.7)*(S.day>4?.45:1)*m*(1+S.cur*.07)))));
+ const mx=Math.max(...h),mi=h.indexOf(mx)+6;let li=7,lv=999;for(let x=7;x<=17;x++)if(h[x-6]<lv){lv=h[x-6];li=x}
+ return {mx,mi,li,lv,h:`<div class="chart">${h.map((v,k)=>`<div class="col"><div class="bar ${k+6==mi?'pk':k+6==li?'lo':''}" style="--h:${v}%;--d:${k*45}ms"><span>${v}%</span></div><small>${k+6}</small></div>`).join('')}</div>`}}
+function post(){
+ $$('.cnt').forEach(e=>{const f=+e.dataset.f,t=+e.dataset.t;S.shown[e.dataset.k]=t;if(f===t)return;const t0=performance.now(),D=800;if(S.shown._init)e.classList.add('bump');
+  (function step(n){const p=Math.min(1,(n-t0)/D),q=1-Math.pow(1-p,3);e.textContent=Math.round(f+(t-f)*q);if(p<1)requestAnimationFrame(step)})(t0)});
+ S.shown._init=1;
+ $$('[data-to]').forEach(e=>requestAnimationFrame(()=>requestAnimationFrame(()=>{e.style.cssText+=';'+e.dataset.to})));
+}
+
+/* toast & notification */
+function toast(m,type=''){const box=$('#toasts'),t=document.createElement('div');t.className='toast '+type;t.innerHTML=m;box.appendChild(t);if(box.children.length>3)box.firstChild.remove();setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300)},2700)}
+function notify(i){const l=S.L[i],b=`Ada ${l.free} slot kosong di ${l.n}. Yuk berangkat!`;S.notifs.unshift({t:T(),b});S.push={t:'Slot parkir tersedia 🎉',b};toast('🔔 '+b,'ok');clearTimeout(S.pt);S.pt=setTimeout(()=>{S.push=null;R()},4000)}
+
+/* data actions */
+function addLog(n,d,s){S.log.unshift({id:++S.lid,t:T(),n,d,s});if(S.log.length>80)S.log.length=80}
+function change(i,d,src='',silent){const l=S.L[i],p=l.free;l.free=d>0?Math.min(l.cap,p+1):Math.max(0,p-1);
+ if(l.free==p){if(!silent)toast(d<0?'Parkir sudah penuh, jumlah tidak berubah':'Slot sudah kosong semua','w');return false}
+ addLog(l.n,(d>0?'Keluar':'Masuk')+src,l.free);S.upd[i]=Date.now();if(p==0&&l.free>0&&S.nt[i])notify(i);R();return true}
+function man(i,d){if(change(i,d,' (manual)'))toast(`Dicatat manual oleh ${S.role}`)}
+function setFull(){const l=cl();l.free=0;addLog(l.n,'Penuh',0);S.upd[S.cur]=Date.now();toast(`${l.n} sekarang penuh`,'w');R()}
+function reset(){S.sq=null;S.L=I();S.nt={};S.notifs=[];S.push=null;initData();toast('Data direset');R()}
+function pick(i,scr){S.cur=i;S.sheet=false;if(scr)S.scr=scr;R()}
+function go(s){S.scr=s;R()}
+function tab(t){S.tab=t;R();window.scrollTo({top:0,behavior:'smooth'})}
+function togN(i){S.nt[i]=!S.nt[i];toast(S.nt[i]?`🔔 Pengingat aktif untuk ${S.L[i].n}`:'Pengingat dimatikan',S.nt[i]?'ok':'');R()}
+function login(r){S.role=r;S.dp='ov';toast(`Masuk sebagai ${r}`,'ok');R()}
+function setCap(i,v){v=Math.max(1,+v||1);S.L[i].cap=v;S.L[i].free=Math.min(S.L[i].free,v);toast('Kapasitas disimpan','ok');R()}
+function kor(){const v=$('#kn').value;if(v===''){toast('Isi jumlah slot yang benar dulu','w');return}const i=+$('#kl').value;S.cf={i,v:Math.max(0,Math.min(+v,S.L[i].cap))};R()}
+function kok(){const c=S.cf,l=S.L[c.i],p=l.free;l.free=c.v;addLog(l.n,'Koreksi manual',c.v);S.upd[c.i]=Date.now();S.cf=null;$('#kn').value='';$('#ka').value='';if(p==0&&l.free>0&&S.nt[c.i])notify(c.i);toast('Koreksi tersimpan dan tercatat di log','ok');R()}
+
+/* sensors */
+function flash(x,low){const e=$('#s'+x);e.classList.add(low?'hitl':'hit');setTimeout(()=>e.classList.remove('hit','hitl'),550)}
+function sens(x,auto){const q=S.sq,o=x=='A'?'B':'A';if(!auto)flash(x);
+ if(!q){S.sq=x;if(!auto)toast(`Sensor ${x} terpicu, menunggu sensor ${o}…`);updSim();return}
+ if(q==x){if(!auto)toast(`Sensor ${x} sudah terpicu, picu sensor ${o}`,'w');return}
+ S.sq=null;const d=x=='B'?-1:1;if(change(S.cur,d))toast(d<0?'🏍️ Motor masuk · slot −1':'🏍️ Motor keluar · slot +1')}
+function tmo(){S.sq=null;toast('⏱ Timeout: hanya satu sensor terpicu, diabaikan','w');updSim()}
+function drive(dir){if(S.busy)return;S.busy=true;S.sq=null;const a=$('#actor'),w=dir=='walk',inn=dir!='out',D=2300;
+ a.innerHTML=w?'<span class="fl"><span class="ped">🚶</span></span>':'<span class="fl">'+MOTO+'</span>';
+ a.querySelector('.fl').style.transform=`scaleX(${w?(inn?-1:1):(inn?1:-1)})`;
+ a.style.transition='none';a.style.left=inn?'-18%':'104%';void a.offsetWidth;
+ a.classList.add('go');a.style.transition=`left ${D}ms linear`;a.style.left=inn?'104%':'-18%';
+ const at=x=>(inn?(x-6+18):(104-x+2))/122*D;
+ setTimeout(()=>{flash(inn?'A':'B',w);if(!w)sens(inn?'A':'B',1)},at(inn?36:64));
+ setTimeout(()=>{flash(inn?'B':'A',w);if(!w)sens(inn?'B':'A',1)},at(inn?64:36));
+ setTimeout(()=>{a.classList.remove('go');S.busy=false;if(w)toast('🚶 Diabaikan: hanya sensor 30 cm yang terpicu, jadi bukan motor','w');updSim()},D);updSim()}
+function togAuto(){S.auto=!S.auto;clearInterval(S.ai);if(S.auto)S.ai=setInterval(()=>{const i=Math.floor(Math.random()*S.L.length),l=S.L[i];const d=l.free==0?1:l.free==l.cap?-1:(Math.random()<.55?-1:1);change(i,d,'',1)},2500);toast(S.auto?'▶ Simulasi otomatis aktif':'⏸ Simulasi otomatis berhenti');updSim()}
+function togSim(){document.body.classList.toggle('simon')}
+function togTheme(){const d=document.documentElement,n=d.dataset.theme=='dark'?'light':'dark';d.dataset.theme=n;$('#thm').innerHTML=svg(n=='dark'?'sun':'moon',18)}
+function updSim(){const l=cl();$('#simsel').innerHTML=S.L.map((x,i)=>`<option value="${i}" ${i==S.cur?'selected':''}>${x.n} · ${x.free}/${x.cap} slot</option>`).join('');
+ $('#simst').innerHTML=`<span class="chip ${SC[st(l)]}"><i></i>${l.free} slot</span><span>${S.busy?'Kendaraan sedang lewat…':S.sq?`Sensor ${S.sq} terpicu, menunggu sensor ${S.sq=='A'?'B':'A'}`:'Menunggu kendaraan'}</span>`;
+ $$('.sbtn button').forEach(b=>b.disabled=S.busy);$('#autoBtn').classList.toggle('on',S.auto)}
+
+/* rider app */
+const OB=[['🏍️','Cek slot sebelum berangkat','Lihat jumlah slot motor yang kosong secara langsung, tanpa harus keliling cari tempat parkir.'],['🚦','Warna = status parkir','<span class="chip g"><i></i>Tersedia</span> <span class="chip a"><i></i>Hampir penuh</span> <span class="chip r"><i></i>Penuh</span><br><br>Cukup lihat warnanya, langsung tahu kondisi parkiran.'],['🔔','Dapat pengingat otomatis','Parkiran penuh? Aktifkan pengingat, nanti kamu dikabari begitu ada slot kosong.']];
+function onb(){const o=OB[S.onb];return `<div class="onb" key="${S.onb}"><button class="skip" onclick="S.onb=null;R()">Lewati</button><div class="oi">${o[0]}</div><h2>${o[1]}</h2><p>${o[2]}</p><div class="dots">${OB.map((_,i)=>`<i class="${i==S.onb?'on':''}"></i>`).join('')}</div><button class="btn" onclick="S.onb=${S.onb<2?S.onb+1:'null'};R()">${S.onb<2?'Lanjut':'Mulai sekarang'} ${svg('right',18)}</button></div>`}
+function sheet(){return `<div class="ov ${S.sheetNew?'anim':''}" onclick="if(event.target==this){S.sheet=false;R()}"><div class="sheet"><div class="grab"></div><h3 style="margin-bottom:10px">Pilih lokasi parkir</h3>${S.L.map((x,i)=>`<button class="opt ${i==S.cur?'on':''}" onclick="pick(${i})"><span class="lic">${svg('pin',18)}</span><span><b>${x.n}</b><small>${x.d} · ${x.free} slot kosong</small></span>${i==S.cur?`<span style="color:var(--pri)">${svg('check',20)}</span>`:chip(x)}</button>`).join('')}</div></div>`}
+const hdr=(t,to='home')=>`<div class="sbar"><button class="ib" onclick="go('${to}')" aria-label="Kembali">${svg('back')}</button><b>${t}</b><span></span></div>`;
+function phone(){const l=cl(),k=st(l),s=S.scr;let c='';
+ if(s=='home')c=`<div class="hello"><div><small class="mu">Selamat ${greet()} 👋</small><h2>Mau parkir di mana?</h2></div><button class="av" onclick="go('notif')" aria-label="Notifikasi">${svg('bell')}${S.notifs.length?'<b></b>':''}</button></div>
+ <button class="loc" onclick="S.sheet=true;S.sheetNew=true;R()"><span class="lic">${svg('pin',18)}</span><span><small>Lokasi dipilih</small><b>${l.n}</b></span>${svg('down',18)}</button>
+ <div class="hero ${SC[k]}"><div class="rw">${ring(l,'r'+S.cur)}<div class="rc"><div class="big">${num('f'+S.cur,l.free)}</div><small>slot kosong dari ${l.cap}</small></div></div>
+ <div class="hm">${chip(l)}<span class="live"><i></i>Diperbarui <span class="ago" data-i="${S.cur}">${ago(S.upd[S.cur])}</span></span></div>
+ <p class="msg">${['Masih banyak tempat. Langsung berangkat aja!','Hampir penuh, sebaiknya segera datang.','Parkir penuh. Coba lokasi lain di bawah.'][k]}</p>${slots(l)}
+ <div class="legend"><span><i class="o"></i>Terisi</span><span><i class="${SC[k]}"></i>Kosong</span><span>1 kotak ≈ ${Math.round(l.cap/48*10)/10} slot</span></div></div>
+ ${k==2?`<button class="banner r" onclick="go('alt')">${svg('alert')}<span><b>Parkir penuh</b><small>Lihat ${S.L.filter(x=>st(x)<2).length} lokasi alternatif terdekat</small></span>${svg('right')}</button>`:''}
+ <div class="qa"><button onclick="go('det')">${svg('grid')}<span>Detail</span></button><button onclick="go('pred')">${svg('chart')}<span>Jam ramai</span></button><button class="${S.nt[S.cur]?'on':''}" onclick="togN(${S.cur})">${svg('bell')}<span>${S.nt[S.cur]?'Pengingat aktif':'Ingatkan saya'}</span></button></div>
+ <div class="sh"><h3>Lokasi lain</h3><small class="mu">Geser →</small></div>
+ <div class="hs">${S.L.map((x,i)=>i==S.cur?'':`<button class="mini ${SC[st(x)]}" onclick="pick(${i})">${chip(x)}<div class="mn">${num('m'+i,x.free)}<small> slot</small></div><b>${x.n}</b><small class="mu">${svg('nav',12)} ${x.d} · ${x.m} mnt jalan</small></button>`).join('')}</div>`;
+ if(s=='det'){const rows=S.log.filter(r=>r.n==l.n).slice(0,4);c=hdr('Detail lokasi')+`<div class="card ${SC[k]}"><div class="row"><div><h3>${l.n}</h3><small class="mu">${l.s}</small></div>${chip(l)}</div>
+ <div class="stats"><div><small>Kosong</small><b>${num('df'+S.cur,l.free)}</b></div><div><small>Terisi</small><b>${l.cap-l.free}</b></div><div><small>Kapasitas</small><b>${l.cap}</b></div></div>
+ ${pbar(l,'p'+S.cur)}<small class="mu">${pc(l)}% terisi · diperbarui <span class="ago" data-i="${S.cur}">${ago(S.upd[S.cur])}</span></small></div>
+ <div class="card"><h4>Aktivitas gerbang terbaru</h4>${rows.map(r=>`<div class="li"><span class="dir ${dcls(r.d)}">${dcls(r.d)=='in'?'↓':dcls(r.d)=='out'?'↑':'•'}</span><div><b>${r.d}</b><small class="mu">${r.t}</small></div><small class="mu">sisa <b style="color:var(--ink)">${r.s}</b></small></div>`).join('')||'<small class="mu">Belum ada aktivitas.</small>'}</div>
+ ${k==2?`<button class="btn" onclick="go('alt')">${svg('nav',18)} Cari lokasi alternatif</button>`:''}
+ <button class="btn ${S.nt[S.cur]?'ok':'ghost'}" onclick="togN(${S.cur})">${svg(S.nt[S.cur]?'check':'bell',18)} ${S.nt[S.cur]?'Pengingat aktif':'Beri tahu saya saat ada slot'}</button>`}
+ if(s=='alt'){const al=S.L.map((x,i)=>({...x,i})).filter(x=>x.i!=S.cur).sort((a,b)=>b.free-a.free);
+  c=hdr('Lokasi alternatif','det')+`<p class="mu" style="margin:-4px 0 12px;font-size:14px">Diurutkan dari slot kosong terbanyak.</p>`+al.map((x,j)=>`<button class="altc ${SC[st(x)]}" onclick="pick(${x.i},'home');toast('Lokasi diganti ke ${x.n}','ok')">${j==0&&st(x)<2?'<span class="best">⭐ Rekomendasi</span>':''}<div class="row"><div><b>${x.n}</b><small class="mu">${x.s}</small></div><div class="an">${x.free}<small> slot</small></div></div><div class="row" style="margin-top:8px"><small class="mu" style="display:flex;gap:5px;align-items:center">${svg('nav',13)} ${x.d} · ±${x.m} menit jalan kaki</small>${chip(x)}</div>${pbar(x,'ap'+x.i)}</button>`).join('')}
+ if(s=='pred'){const b=bars(l);c=`<h2 class="pt">Prediksi jam ramai</h2><small class="mu">${l.n} · dari data sensor 4 minggu terakhir</small>
+ <div class="seg">${days.map((d,i)=>`<button class="${i==S.day?'on':''}" onclick="S.day=${i};R()">${d}</button>`).join('')}</div>
+ <div class="card">${b.h}<div class="legend"><span><i class="a"></i>Paling ramai</span><span><i class="g"></i>Paling lengang</span><span>Arahkan kursor ke batang</span></div></div>
+ <div class="ins"><div class="a"><small>Paling ramai</small><b>${pad(b.mi)}.00–${pad(b.mi+1)}.00</b><small>±${b.mx}% terisi</small></div><div class="g"><small>Waktu terbaik datang</small><b>${pad(b.li)}.00–${pad(b.li+1)}.00</b><small>±${b.lv}% terisi</small></div></div>
+ <div class="card tip"><span>💡</span><span>Datang sebelum <b>${pad(b.mi-1)}.30</b> supaya peluang dapat slot lebih besar.</span></div>`}
+ if(s=='notif')c=`<h2 class="pt">Notifikasi</h2><small class="mu">Kamu akan dikabari saat parkiran yang penuh punya slot kosong lagi.</small>
+ <div class="card" style="margin-top:14px">${S.L.map((x,i)=>`<div class="li"><div><b>${x.n}</b><small class="mu">${x.free} slot · ${SN[st(x)]}</small></div><button class="sw ${S.nt[i]?'on':''}" onclick="togN(${i})" aria-label="Pengingat ${x.n}"></button></div>`).join('')}</div>
+ <h4 style="margin:18px 0 8px">Riwayat</h4>${S.notifs.length?`<div class="card">${S.notifs.slice(0,8).map(n=>`<div class="li"><span class="dir out">${svg('bell',16)}</span><div><b>Slot tersedia</b><small class="mu">${n.b}</small></div><small class="mu">${n.t}</small></div>`).join('')}</div>`:`<div class="empty">${svg('bell',28)}<b>Belum ada notifikasi</b><small>Aktifkan pengingat di parkiran yang penuh, lalu simulasikan motor keluar.</small></div>`}`;
+ if(s=='help')c=`<h2 class="pt">Bantuan</h2><small class="mu">Arti warna dan cara kerja sistem.</small>
+ <div class="card" style="margin-top:14px">${[0,1,2].map(i=>`<div class="li"><span class="chip ${SC[i]}"><i></i>${SN[i]}</span><small class="mu" style="text-align:right">${['Slot kosong lebih dari '+S.th+'%','Slot kosong 1 sampai '+S.th+'%','Tidak ada slot kosong'][i]}</small></div>`).join('')}</div>
+ <div class="card"><details open><summary>Bagaimana angka slot dihitung?</summary><p>Dua sensor (A di luar, B di dalam) di gerbang mendeteksi urutan lewatnya motor. A lalu B berarti masuk, B lalu A berarti keluar.</p></details>
+ <details><summary>Apakah pejalan kaki ikut dihitung?</summary><p>Tidak. Sensor dipasang di dua ketinggian (30 cm dan 60 cm), jadi sistem bisa membedakan motor dari pejalan kaki.</p></details>
+ <details><summary>Perlu login untuk melihat slot?</summary><p>Tidak perlu. Pengendara bisa langsung melihat slot. Login hanya untuk petugas dan pengelola.</p></details>
+ <details><summary>Bagaimana kalau angkanya salah?</summary><p>Petugas bisa mengoreksi jumlah slot dari dashboard, dan setiap koreksi tercatat di log.</p></details></div>
+ <button class="btn ghost" onclick="S.onb=0;R()">Lihat panduan awal lagi</button>`;
+ const nv=[['home','home','Beranda'],['pred','chart','Prediksi'],['notif','bell','Notifikasi'],['help','help','Bantuan']],top=['home','det','alt'].includes(s)?'home':s,ix=nv.findIndex(n=>n[0]==top),pv=S.navPrev;S.navPrev=ix;
+ return `<div class="device"><div class="notch"></div><div class="stb"><span class="clk">${T()}</span><span>5G ▮▮▮ 🔋</span></div>
+ ${S.push?`<div class="push">${svg('bell',20)}<div><b>${S.push.t}</b><small>${S.push.b}</small></div></div>`:''}
+ <div class="scr ${S._enter?'enter':''}" id="scr">${c}</div>
+ <nav class="nv"><i class="ind" style="transform:translateX(${pv*100}%)" data-to="transform:translateX(${ix*100}%)"></i>${nv.map(n=>`<button class="${n[0]==top?'on':''}" onclick="go('${n[0]}')">${svg(n[1],21)}${n[2]}</button>`).join('')}</nav>
+ ${S.sheet?sheet():''}${S.onb!==null?onb():''}</div>`}
+function guide(){return `<div class="guide"><div class="card"><span class="eyebrow">Prototype interaktif</span><h2>Coba alur pengguna</h2><small class="mu">Klik langkah di bawah untuk langsung lompat ke layarnya. Semua tombol di HP bisa diklik.</small>
+ <div class="steps">
+ <button onclick="S.tab='app';S.onb=0;go('home')"><span><b>Lihat onboarding</b><small>Pengenalan singkat untuk pengguna baru</small></span></button>
+ <button onclick="S.onb=null;S.sheet=true;S.sheetNew=true;go('home')"><span><b>Ganti lokasi parkir</b><small>Bottom sheet pilihan lokasi</small></span></button>
+ <button onclick="S.onb=null;S.scr='home';setFull()"><span><b>Simulasikan parkir penuh</b><small>Banner merah dan saran lokasi alternatif</small></span></button>
+ <button onclick="S.onb=null;go('det')"><span><b>Aktifkan pengingat</b><small>Dikabari saat ada slot kosong</small></span></button>
+ <button onclick="S.onb=null;go('pred')"><span><b>Cek prediksi jam ramai</b><small>Grafik per hari dan waktu terbaik datang</small></span></button>
+ <button onclick="document.body.classList.add('simon')"><span><b>Jalankan simulator sensor</b><small>Animasi motor lewat sensor A dan B</small></span></button>
+ <button onclick="tab('gate')"><span><b>Lihat layar gerbang</b><small>Papan LED di pintu masuk parkir</small></span></button>
+ <button onclick="tab('dash')"><span><b>Masuk dashboard petugas</b><small>Log, koreksi manual, laporan</small></span></button>
+ </div></div></div>`}
+function gate(){const l=cl(),k=st(l),alt=S.L.filter((x,i)=>i!=S.cur&&st(x)<2).sort((a,b)=>b.free-a.free)[0];
+ return `<div class="gwrap"><div class="gsel">${S.L.map((x,i)=>`<button class="${i==S.cur?'on':''}" onclick="pick(${i})">${x.n}</button>`).join('')}</div>
+ <div class="gate ${SC[k]}"><div class="gtop"><span>SELAMAT DATANG DI</span><span class="clk">${T()}</span></div><h2>${l.n.toUpperCase()}</h2>
+ <div class="gnum">${num('g'+S.cur,l.free)}</div><div class="glab">SLOT MOTOR TERSEDIA</div>
+ <div class="gstat">${k==2?'⛔ PARKIR PENUH':k==1?'⚠ HAMPIR PENUH':'✓ SILAKAN MASUK'}</div>
+ ${k==2&&alt?`<div class="garrow"><span class="arr">➜</span> ${alt.n.toUpperCase()} · ${alt.free} SLOT · ${alt.d}</div>`:''}
+ ${pbar(l,'gb'+S.cur,'gbar')}</div>
+ <p class="gnote">Tampilan layar LED di pintu masuk. Angka berubah otomatis saat sensor mendeteksi motor. Buka <b>Simulator</b> untuk mencoba.</p></div>`}
+function dash(){
+ if(!S.role)return `<div class="login"><div class="lart"><div class="lbadge">${svg('grid',28)}</div><h2>Dashboard Pengelola</h2><p>Pantau semua lokasi parkir, cek log sensor, dan koreksi data bila sensor salah hitung.</p><div class="lfeat"><span>${svg('check',16)} Data real-time dari sensor</span><span>${svg('check',16)} Log aktivitas gerbang</span><span>${svg('check',16)} Laporan jam puncak</span></div></div>
+ <div class="lform"><h3>Masuk</h3><small class="mu">Khusus petugas dan pengelola. Pengendara tidak perlu login.</small><label>Username</label><input id="lu" value="petugas01"><label>Kata sandi</label><input id="lp" type="password" value="12345678"><button class="btn" onclick="login('Petugas')">Masuk sebagai Petugas</button><button class="btn ghost" onclick="login('Pengelola')">Masuk sebagai Pengelola</button><small class="mu">Prototype: Pengelola punya menu Laporan dan Pengaturan tambahan.</small></div></div>`;
+ const P=S.role=='Pengelola',m=[['ov','grid','Ringkasan'],['log','list','Log aktivitas'],['kor','edit','Koreksi manual'],...(P?[['lap','file','Laporan'],['set','gear','Pengaturan']]:[])],d=S.dp,ttl={ov:['Ringkasan','Kondisi semua lokasi parkir saat ini'],log:['Log aktivitas','Riwayat kejadian dari sensor dan petugas'],kor:['Koreksi manual','Ubah jumlah slot jika sensor salah hitung'],lap:['Laporan','Analisis jam puncak per lokasi'],set:['Pengaturan','Kapasitas dan ambang status']}[d];let c='';
+ if(d=='ov'){const tot=S.L.reduce((a,l)=>a+l.free,0),cap=S.L.reduce((a,l)=>a+l.cap,0),occ=Math.round((cap-tot)/cap*100);
+  c=`<div class="kpis ${S._enter?'st':''}"><div class="kpi g"><span class="ki">${svg('grid',18)}</span><small>Total slot kosong</small><b>${num('kt',tot)}</b><small class="mu">dari ${cap} slot</small></div>
+  <div class="kpi a"><span class="ki">${svg('chart',18)}</span><small>Tingkat keterisian</small><b>${num('ko',occ)}%</b><small class="mu">semua lokasi</small></div>
+  <div class="kpi"><span class="ki">${svg('zap',18)}</span><small>Aktivitas tercatat</small><b>${num('kl',S.log.length)}</b><small class="mu">hari ini</small></div>
+  <div class="kpi r"><span class="ki">${svg('alert',18)}</span><small>Sensor online</small><b>5/6</b><small class="mu">1 perlu dicek</small></div></div>
+  <div class="lgrid">${S.L.map((l,i)=>`<div class="lc ${SC[st(l)]}"><div class="row"><b>${l.n}</b>${chip(l)}</div><div class="rwm"><div class="rws">${ring(l,'dr'+i,92,10)}<b>${num('dc'+i,l.free)}</b></div><div><small class="mu">Slot kosong</small><div style="font-size:16px;font-weight:700">${l.free} / ${l.cap}</div><small class="mu">Update <span class="ago" data-i="${i}">${ago(S.upd[i])}</span></small></div></div><div class="bpair"><button onclick="man(${i},-1)">− Motor masuk</button><button onclick="man(${i},1)">+ Motor keluar</button></div></div>`).join('')}</div>
+  <div class="card"><h4>Peringatan</h4>${S.L.filter(l=>st(l)==2).map(l=>`<div class="li"><span class="dir in">${svg('alert',16)}</span><div><b>${l.n} penuh</b><small class="mu">Layar gerbang menampilkan arahan ke lokasi lain</small></div></div>`).join('')}<div class="li"><span class="dir">${svg('wrench',16)}</span><div><b>Sensor 60 cm Parkir Perpustakaan offline</b><small class="mu">Terakhir aktif 2 jam lalu</small></div><button class="btn sm ghost" onclick="toast('Laporan dikirim ke teknisi','ok')">Laporkan</button></div></div>`}
+ if(d=='log'){const rows=S.log.filter(r=>S.lf==='all'||r.n==S.L[S.lf].n).slice(0,20);
+  c=`<div class="card"><div class="seg" style="margin-top:0">${[['all','Semua'],...S.L.map((l,i)=>[i,l.n.replace('Parkir ','')])].map(x=>`<button class="${S.lf===x[0]?'on':''}" onclick="S.lf=${x[0]==='all'?"'all'":x[0]};R()">${x[1]}</button>`).join('')}</div><div class="tw"><table><tr><th>Waktu</th><th>Lokasi</th><th>Kejadian</th><th>Sisa slot</th></tr>${rows.map(r=>`<tr class="${r.id>S.seen?'new':''}"><td>${r.t}</td><td>${r.n}</td><td><span class="tag ${dcls(r.d)}">${r.d}</span></td><td><b>${r.s}</b></td></tr>`).join('')}</table></div></div>`}
+ if(d=='kor')c=`<div class="card fm"><label style="margin-top:0">Lokasi</label><select id="kl">${S.L.map((l,i)=>`<option value="${i}" ${i==S.cur?'selected':''}>${l.n} (sekarang ${l.free})</option>`).join('')}</select><label>Jumlah slot kosong yang benar</label><input id="kn" type="number" min="0" placeholder="mis. 10"><label>Alasan koreksi</label><input id="ka" placeholder="mis. sensor salah hitung saat hujan"><button class="btn" style="margin-top:16px" onclick="kor()">Simpan koreksi</button><small class="mu">Setiap koreksi tercatat di log beserta peran petugas.</small></div>
+  ${S.cf?`<div class="modal" onclick="if(event.target==this){S.cf=null;R()}"><div><div class="mic">${svg('edit',24)}</div><h3>Simpan koreksi?</h3><p class="mu">Slot kosong <b style="color:var(--ink)">${S.L[S.cf.i].n}</b> akan diubah dari ${S.L[S.cf.i].free} menjadi <b style="color:var(--ink)">${S.cf.v}</b>.</p><button class="btn" onclick="kok()">Ya, simpan</button><button class="btn ghost" onclick="S.cf=null;R()">Batal</button></div></div>`:''}`;
+ if(d=='lap'){const b=bars(cl(),[.8,1,.9][S.per]);c=`<div class="card"><div class="row" style="flex-wrap:wrap"><div class="seg" style="margin:0">${S.L.map((l,i)=>`<button class="${i==S.cur?'on':''}" onclick="S.cur=${i};R()">${l.n.replace('Parkir ','')}</button>`).join('')}</div><button class="btn sm" onclick="toast('📄 Laporan diekspor ke PDF (simulasi)','ok')">${svg('file',16)} Ekspor</button></div>
+  <div class="seg">${['Hari ini','Minggu ini','Bulan ini'].map((x,i)=>`<button class="${i==S.per?'on':''}" onclick="S.per=${i};R()">${x}</button>`).join('')}</div>${b.h}</div>
+  <div class="ins"><div class="a"><small>Jam puncak</small><b>${pad(b.mi)}.00–${pad(b.mi+1)}.00</b><small>±${b.mx}% terisi</small></div><div class="g"><small>Paling lengang</small><b>${pad(b.li)}.00–${pad(b.li+1)}.00</b><small>±${b.lv}% terisi</small></div></div>`}
+ if(d=='set')c=`<div class="card fm"><h4>Kapasitas lokasi</h4>${S.L.map((l,i)=>`<label>${l.n}</label><input id="cap${i}" type="number" min="1" value="${l.cap}" onchange="setCap(${i},this.value)">`).join('')}
+  <h4 style="margin-top:22px">Ambang “Hampir penuh”</h4><label>Status jadi kuning saat slot kosong ≤ <b id="thv">${S.th}</b>%</label><input type="range" min="5" max="50" value="${S.th}" oninput="$('#thv').textContent=this.value" onchange="S.th=+this.value;toast('Ambang diperbarui','ok');R()">
+  <div class="legend" style="justify-content:flex-start">${[0,1,2].map(i=>`<span class="chip ${SC[i]}"><i></i>${SN[i]}</span>`).join('')}</div></div>`;
+ return `<div class="dl"><aside class="side">${m.map(x=>`<button class="mi ${x[0]==d?'on':''}" onclick="S.dp='${x[0]}';S.cf=null;R()">${svg(x[1],18)}<span>${x[2]}</span></button>`).join('')}<div class="ubox"><span class="uav">${S.role[0]}</span><div><b>${S.role}</b><small>${S.role=='Pengelola'?'Akses penuh':'Akses operasional'}</small></div><button class="ib" onclick="S.role=null;R()" aria-label="Keluar" title="Keluar">${svg('logout',17)}</button></div></aside>
+ <section><div class="dhd"><div><h2>${ttl[0]}</h2><small class="mu">${ttl[1]}</small></div><span class="live"><i></i>Live</span></div>${c}</section></div>`}
+
+function R(){
+ const enter=S.scr!==S._ls||S.tab!==S._lt||(S.tab=='dash'&&S.dp!==S._ld),tabCh=S.tab!==S._lt;S._enter=enter;
+ const sc=$('#scr'),keep=sc&&!enter?sc.scrollTop:0,vals={};if(!enter)$$('#main input,#main select').forEach(e=>{if(e.id)vals[e.id]=e.value});const fid=document.activeElement&&document.activeElement.id;
+ S._ls=S.scr;S._lt=S.tab;S._ld=S.dp;
+ $('#tabs').innerHTML=[['app','user','Pengendara'],['gate','monitor','Layar Gerbang'],['dash','grid','Dashboard']].map(t=>`<button class="${t[0]==S.tab?'on':''}" onclick="tab('${t[0]}')">${svg(t[1],16)}<span>${t[2]}</span></button>`).join('');
+ const mn=$('#main');mn.className='main'+(S.tab=='app'?' app':'');if(tabCh){void mn.offsetWidth;mn.classList.add('fade')}
+ mn.innerHTML=S.tab=='app'?`<div class="applay"><div>${phone()}</div>${guide()}</div>`:S.tab=='gate'?gate():dash();
+ for(const k in vals){const e=document.getElementById(k);if(e&&e.tagName=='INPUT')e.value=vals[k]}
+ if(fid){const e=document.getElementById(fid);if(e&&e.tagName=='INPUT')e.focus()}
+ if(keep)$('#scr').scrollTop=keep;
+ if(S.tab=='dash'&&S.dp=='log')S.seen=S.lid;
+ S.sheetNew=false;updSim();post()}
+
+$('#demo').innerHTML=svg('flask',18)+'<span>Simulator</span>';$('#simx').innerHTML=svg('x',18);
+if(matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.dataset.theme='dark';
+$('#thm').innerHTML=svg(document.documentElement.dataset.theme=='dark'?'sun':'moon',18);
+$('#actor').innerHTML='<span class="fl">'+MOTO+'</span>';
+R();
+setInterval(()=>{$$('.clk').forEach(e=>e.textContent=T());$$('.ago').forEach(e=>e.textContent=ago(S.upd[+e.dataset.i]))},1000);
+document.addEventListener('keydown',e=>{if(e.key=='Escape'){document.body.classList.remove('simon');if(S.sheet||S.cf){S.sheet=false;S.cf=null;R()}}});
+</script>
+</body>
+</html>
